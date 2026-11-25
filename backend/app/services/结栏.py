@@ -14,6 +14,7 @@ def 结当前栏() -> dict:
     批 = f"结栏-{uuid.uuid4().hex[:8]}"
     conn = 连接()
     try:
+        conn.execute("BEGIN")
         rows = conn.execute(
             "SELECT * FROM 入栏缓冲 WHERE 栏号=? AND 命运='在栏'", (栏号,)
         ).fetchall()

@@ -9,7 +9,9 @@ from pathlib import Path
 
 def 连接() -> sqlite3.Connection:
     数据目录.mkdir(parents=True, exist_ok=True)
-    c = sqlite3.connect(库路径)
+    # 显式事务：禁止驱动在 DML 前隐式 BEGIN、在 RELEASE SAVEPOINT 时顺带提交，
+    # 否则坏点同成同败的保存点回滚会把观测插入先落盘。
+    c = sqlite3.connect(库路径, isolation_level=None)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA foreign_keys = ON")
     return c

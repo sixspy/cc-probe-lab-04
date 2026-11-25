@@ -21,7 +21,11 @@
 
     <section class="卷">
       <div class="工具"><button class="按钮" id="跑">跑栏贯验</button> <span id="果"></span></div>
-      <div class="表绕"><table><thead><tr><th>时刻</th><th>在栏</th><th>汇总报文</th><th>坏点</th><th>结果</th><th>说明</th></tr></thead><tbody id="表"></tbody></table></div>
+      <div class="双栏 下距12">
+        <p class="说明">对账灯同时要求：已汇总缓冲与汇总账报文数一致，且<b class="铜字">坏点匣每行原观测（观测时+读数）齐套可回读</b>。任一不满足即撕裂红。</p>
+        <div class="侧注" id="齐套态">齐套快照加载中…</div>
+      </div>
+      <div class="表绕"><table><thead><tr><th>时刻</th><th>在栏</th><th>汇总报文</th><th>坏点</th><th>坏点缺原观测</th><th>结果</th><th>说明</th></tr></thead><tbody id="表"></tbody></table></div>
     </section>
     <script>
     async function 刷() {
@@ -29,8 +33,12 @@
       const tb = document.getElementById("表"); tb.innerHTML = "";
       for (const r of rows) {
         const ok = r.是否对齐 ? 探栏.徽章("对齐","好") : 探栏.徽章("撕裂","危");
-        tb.appendChild(探栏.行(`<td>${探栏.安全文本(r.时刻)}</td><td>${r.在栏笔数}</td><td>${r.汇总报文数}</td><td>${r.坏点笔数}</td><td>${ok}</td><td>${探栏.安全文本(r.说明)}</td>`));
+        tb.appendChild(探栏.行(`<td>${探栏.安全文本(r.时刻)}</td><td>${r.在栏笔数}</td><td>${r.汇总报文数}</td><td>${r.坏点笔数}</td><td>${r.坏点缺原观测 ?? "—"}</td><td>${ok}</td><td>${探栏.安全文本(r.说明)}</td>`));
       }
+      const s = await 探栏.getJSON("/api/栏贯验/快照");
+      document.getElementById("齐套态").innerHTML =
+        `坏点 ${s.坏点} 行 · 缺原观测 <b class="${s.坏点缺原观测 ? "危字" : ""}">${s.坏点缺原观测}</b> · `
+        + (s.坏点齐套 ? 探栏.徽章("原观测齐套","好") : 探栏.徽章("原观测不齐套","危"));
     }
     document.getElementById("跑").onclick = async () => {
       const d = await 探栏.postJSON("/api/栏贯验/跑");

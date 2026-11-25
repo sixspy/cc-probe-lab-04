@@ -16,19 +16,42 @@
     <div class="门槛条" id="门槛条"></div>
     <header class="顶牌" style="margin-bottom:10px">
       <h1 style="font-size:22px">坏点匣</h1>
-      <div class="骨">未过质控门槛的报文旁路。</div>
+      <div class="骨">未过质控门槛的报文旁路。坏点旁路保留策略：<b class="铜字">旁路凭证冻结</b>——匣行凭旁路凭证冻住原观测时与原读数，与观测报文同票同成败，禁止回刷抹字段。</div>
     </header>
 
     <section class="卷">
-      <div class="表绕"><table><thead><tr><th>编号</th><th>报文编号</th><th>站点</th><th>原因</th><th>读数</th><th>观测时</th></tr></thead><tbody id="表"></tbody></table></div>
+      <div class="横排 下距12" id="保留水位"></div>
+      <div class="表绕"><table><thead><tr><th>编号</th><th>报文编号</th><th>站点</th><th>原因</th><th>原读数</th><th>原观测时</th><th>旁路凭证</th><th>保留形态</th><th>原观测回读</th><th>同票一致</th></tr></thead><tbody id="表"></tbody></table></div>
+      <p class="说明 上距8">原观测回读为“可回读”表示冻结的原观测时与原读数仍拿得到；“已丢失”表示该行只剩原因，栏贯验对账灯转红。只读接口：<code>GET /api/坏点旁路保留</code>。</p>
     </section>
     <script>
     (async () => {
-      const rows = await 探栏.getJSON("/api/坏点匣");
+      const rows = await 探栏.getJSON("/api/坏点旁路保留");
+      const 水位 = document.getElementById("保留水位");
+      const 可回读 = rows.filter((r) => r.原观测可回读).length;
+      const 丢失 = rows.length - 可回读;
+      水位.innerHTML = [
+        ["匣行", rows.length],
+        ["原观测可回读", 可回读],
+        ["原观测已丢失", 丢失],
+      ].map(([标, v]) => `<div class="水卡"><div class="数">${v}</div><div class="标">${探栏.安全文本(标)}</div></div>`).join("");
       const tb = document.getElementById("表");
-      if (!rows.length) { tb.innerHTML = `<tr><td colspan="6">${探栏.空态("坏点匣为空。灌坏点样例可看到越界旁路。")}</td></tr>`; return; }
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="10">${探栏.空态("坏点匣为空。灌坏点样例可看到越界旁路。")}</td></tr>`; return; }
       for (const r of rows) {
-        tb.appendChild(探栏.行(`<td>${r.编号}</td><td>${探栏.安全文本(r.报文编号)}</td><td>${探栏.安全文本(r.站点键)}</td><td>${探栏.徽章(r.原因,"警")}</td><td>${r.读数}</td><td>${探栏.安全文本(r.观测时)}</td>`));
+        const 回读 = r.原观测可回读 ? 探栏.徽章("可回读","好") : 探栏.徽章("已丢失","危");
+        const 同票 = r.同票一致 ? 探栏.徽章("同票一致","好") : 探栏.徽章("票据不符","危");
+        tb.appendChild(探栏.行(
+          `<td>${r.编号}</td>`
+          + `<td>${探栏.安全文本(r.报文编号)}</td>`
+          + `<td>${探栏.安全文本(r.站点键)}</td>`
+          + `<td>${探栏.徽章(r.原因,"警")}</td>`
+          + `<td>${r.原读数 ?? "—"}</td>`
+          + `<td>${探栏.安全文本(r.原观测时) || "—"}</td>`
+          + `<td><code>${探栏.安全文本(r.旁路凭证)}</code></td>`
+          + `<td>${探栏.安全文本(r.保留形态)}</td>`
+          + `<td>${回读}</td>`
+          + `<td>${同票}</td>`
+        ));
       }
     })();
     </script>

@@ -40,6 +40,14 @@
       <pre class="回执" id="回执">操作回执会显示在这里</pre>
     </section>
     <section class="卷">
+      <h2>坏点旁路保留</h2>
+      <div class="双栏">
+        <p class="说明">策略：<b class="铜字" id="保留形态">旁路凭证冻结</b>。坏点匣行凭旁路凭证冻住原观测时与原读数，与观测报文同票同成败；同号再进匣由库级唯一互斥挡住，不双匣。</p>
+        <div class="侧注">只读回读接口：<code>GET /api/坏点旁路保留</code>，原观测是否拿得到逐行可区分。</div>
+      </div>
+      <div class="水位 上距8" id="旁路水位"></div>
+    </section>
+    <section class="卷">
       <h2>最近装载批次</h2>
       <div class="表绕"><table><thead><tr><th>编号</th><th>时刻</th><th>入流</th><th>入栏</th><th>坏点</th></tr></thead><tbody id="装载批次表"></tbody></table></div>
     </section>
@@ -62,6 +70,16 @@
       探栏.渲染批次表(document.getElementById("结栏批次表"), closes, ["编号","栏号","时刻","汇总数"]);
       const info = await 探栏.getJSON("/api/仓情");
       探栏.填命运字典(document.getElementById("命运词典"), info["命运词典"] || {});
+      const 旁路 = await 探栏.getJSON("/api/坏点旁路保留");
+      const 可回读 = 旁路.filter((r) => r.原观测可回读).length;
+      const 丢失 = 旁路.length - 可回读;
+      const pw = document.getElementById("旁路水位");
+      pw.innerHTML = [
+        ["匣行", 旁路.length],
+        ["原观测可回读", 可回读],
+        ["原观测已丢失", 丢失],
+        ["同票一致", 旁路.filter((r) => r.同票一致).length],
+      ].map(([标, v]) => `<div class="水卡"><div class="数">${v}</div><div class="标">${探栏.安全文本(标)}</div></div>`).join("");
     }
     async function 跑(fn) {
       const el = document.getElementById("回执");

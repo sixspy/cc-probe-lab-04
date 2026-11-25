@@ -68,6 +68,11 @@ async def api_坏点():
     return jsonify(目录.坏点列表())
 
 
+@app.get("/api/坏点旁路保留")
+async def api_坏点旁路保留():
+    return jsonify(目录.坏点旁路保留列表())
+
+
 @app.get("/api/栏贯验")
 async def api_贯验列表():
     return jsonify(目录.贯验列表())

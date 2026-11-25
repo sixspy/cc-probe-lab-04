@@ -66,6 +66,16 @@
       <h2>夹具预检</h2>
       <div class="表绕"><table><thead><tr><th>夹具</th><th>报文数</th><th>可装</th><th>摘要</th></tr></thead><tbody id="夹具预检表"></tbody></table></div>
     </section>
+    <section class="卷">
+      <h2>坏点旁路保留策略</h2>
+      <div class="竖排">
+        <div class="只读框"><b class="铜字">工程形态：旁路凭证冻结</b> · 坏点落下时生成旁路凭证，匣行冻住原观测时与原读数，不做只留摘要的双写归档，下游凭同一票号回读。</div>
+        <div class="只读框">同票同成败：坏点匣写入与观测报文命运更新在同一事务，同成同败；正式观测字段禁止回刷抹空。</div>
+        <div class="只读框">互斥：坏点匣报文编号库级唯一索引 + 装载串行闸，同号两路并发只成一匣，另一路干净幂等驳回。</div>
+        <div class="只读框">只读回读：<code>GET /api/坏点旁路保留</code> 联查匣行与观测流，逐行给出“原观测可回读/已丢失”与同票一致标记；缺原观测的匣行会让栏贯验亮撕裂灯。</div>
+      </div>
+      <div class="水位 上距12" id="旁路水位"></div>
+    </section>
     <section class="卷"><h2>空桩目录</h2><p class="说明" id="空桩"></p>
       <div class="双栏"><p class="说明">栏规钉死当前栏与 PM25 上下限。分指标门槛属于空桩。</p>
       <div class="侧注">版式：底栏铜青。潮切是左侧窗时间轴浅纸底。</div></div>
@@ -75,6 +85,13 @@
       document.getElementById("规").textContent = JSON.stringify(await 探栏.getJSON("/api/栏规"), null, 2);
       const s = await 探栏.getJSON("/api/空桩");
       document.getElementById("空桩").textContent = "空桩 " + s.条数 + "：" + (s.空桩 || []).join(" · ");
+      const 旁路 = await 探栏.getJSON("/api/坏点旁路保留");
+      const 丢失 = 旁路.filter((r) => !r.原观测可回读).length;
+      document.getElementById("旁路水位").innerHTML = [
+        ["匣行", 旁路.length],
+        ["原观测可回读", 旁路.length - 丢失],
+        ["原观测已丢失", 丢失],
+      ].map(([标, v]) => `<div class="水卡"><div class="数">${v}</div><div class="标">${探栏.安全文本(标)}</div></div>`).join("");
     })();
     </script>
 

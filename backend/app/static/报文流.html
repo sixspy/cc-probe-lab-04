@@ -23,6 +23,11 @@
       <div class="横排 下距12" id="命运统计"></div>
       <div class="表绕"><table><thead><tr><th>报文编号</th><th>站点</th><th>指标</th><th>读数</th><th>观测时</th><th>命运</th></tr></thead><tbody id="表"></tbody></table></div>
     </section>
+    <section class="卷">
+      <h2>坏点旁路保留 · 同票凭证</h2>
+      <p class="说明">坏点报文的正式观测字段（读数、观测时）留在报文流不抹空；旁路凭证在坏点匣冻结同一份原观测，两路同票同成败。</p>
+      <div class="表绕"><table><thead><tr><th>报文编号</th><th>原读数</th><th>原观测时</th><th>旁路凭证</th><th>保留形态</th><th>原观测回读</th><th>观测命运</th></tr></thead><tbody id="旁路表"></tbody></table></div>
+    </section>
     <section class="卷"><div class="双栏"><p class="说明">报文是装载入流。命运应可读：已装载→已入栏/已坏点→已汇总。</p><div class="侧注">子方向：采集入库质控。行业皮：环境监测传感站。</div></div></section>
     <script>
     (async () => {
@@ -33,9 +38,24 @@
       ).join("") || 探栏.空态("尚无命运统计");
       const rows = await 探栏.getJSON("/api/观测报文");
       const tb = document.getElementById("表");
-      if (!rows.length) { tb.innerHTML = `<tr><td colspan="6">${探栏.空态("尚无报文。回探栏台灌入栏成汇总样例。")}</td></tr>`; return; }
-      for (const r of rows) {
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="6">${探栏.空态("尚无报文。回探栏台灌入栏成汇总样例。")}</td></tr>`; }
+      else for (const r of rows) {
         tb.appendChild(探栏.行(`<td>${探栏.安全文本(r.报文编号)}</td><td>${探栏.安全文本(r.站点键)}</td><td>${探栏.安全文本(r.指标键)}</td><td>${r.读数}</td><td>${探栏.安全文本(r.观测时)}</td><td>${探栏.徽章(r.命运)}</td>`));
+      }
+      const 旁路 = await 探栏.getJSON("/api/坏点旁路保留");
+      const pb = document.getElementById("旁路表");
+      if (!旁路.length) { pb.innerHTML = `<tr><td colspan="7">${探栏.空态("尚无坏点旁路。灌坏点样例后，此处显示凭证冻结的原观测。")}</td></tr>`; }
+      else for (const r of 旁路) {
+        const 回读 = r.原观测可回读 ? 探栏.徽章("可回读","好") : 探栏.徽章("已丢失","危");
+        pb.appendChild(探栏.行(
+          `<td>${探栏.安全文本(r.报文编号)}</td>`
+          + `<td>${r.原读数 ?? "—"}</td>`
+          + `<td>${探栏.安全文本(r.原观测时) || "—"}</td>`
+          + `<td><code>${探栏.安全文本(r.旁路凭证)}</code></td>`
+          + `<td>${探栏.安全文本(r.保留形态)}</td>`
+          + `<td>${回读}</td>`
+          + `<td>${探栏.徽章(r.观测命运)}</td>`
+        ));
       }
     })();
     </script>
